@@ -1,4 +1,5 @@
 import { sign, verify, type JwtPayload, type SignOptions } from "jsonwebtoken";
+import { ROLES, type Role } from "@/domain/enums.js";
 import type { TokenPayload, TokenServicePort } from "@/application/ports/token-service.port.js";
 
 export class JwtTokenService implements TokenServicePort {
@@ -22,10 +23,14 @@ export class JwtTokenService implements TokenServicePort {
       if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
         return null;
       }
+      if (!ROLES.includes(payload.role as Role)) {
+        return null;
+      }
 
       return {
         sub: payload.sub,
         email: payload.email,
+        role: payload.role as Role,
       };
     } catch {
       return null;

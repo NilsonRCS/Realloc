@@ -26,6 +26,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       UserName.create(input.name),
       email,
       hashPassword(input.password),
+      input.role ?? "ADMIN",
       new Date()
     );
     const created = await this.userRepository.create(user);
@@ -34,6 +35,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       id: created.id,
       name: created.name.value,
       email: created.email.value,
+      role: created.role,
       createdAt: created.createdAt,
     };
   }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildApp } from "../src/main/app.js";
+import { adminToken, bearer } from "./helpers.js";
 
 test("POST /api/auth/login returns access token", async () => {
   process.env.USER_REPOSITORY = "inmemory";
@@ -13,6 +14,7 @@ test("POST /api/auth/login returns access token", async () => {
     const create = await app.inject({
       method: "POST",
       url: "/api/users",
+      headers: bearer(await adminToken(app)),
       payload: {
         name: "Http Auth",
         email: "http.auth@example.com",
@@ -51,6 +53,7 @@ test("GET /api/auth/me returns current user with bearer token", async () => {
     const create = await app.inject({
       method: "POST",
       url: "/api/users",
+      headers: bearer(await adminToken(app)),
       payload: {
         name: "Http Me",
         email: "http.me@example.com",
@@ -133,6 +136,7 @@ test("GET /api/users returns 200 with valid bearer token", async () => {
     await app.inject({
       method: "POST",
       url: "/api/users",
+      headers: bearer(await adminToken(app)),
       payload: { name: "List User", email: "list.user@example.com", password: "secret123" },
     });
 

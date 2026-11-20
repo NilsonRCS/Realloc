@@ -19,6 +19,7 @@ export class GetUserUseCase implements IGetUserUseCase {
       id: user.id,
       name: user.name.value,
       email: user.email.value,
+      role: user.role,
       createdAt: user.createdAt,
     };
   }

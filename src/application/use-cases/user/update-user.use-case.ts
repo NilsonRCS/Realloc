@@ -32,6 +32,7 @@ export class UpdateUserUseCase implements IUpdateUserUseCase {
       input.name ? UserName.create(input.name) : existing.name,
       nextEmail,
       existing.passwordHash,
+      existing.role,
       existing.createdAt
     );
 
@@ -40,6 +41,7 @@ export class UpdateUserUseCase implements IUpdateUserUseCase {
       id: stored.id,
       name: stored.name.value,
       email: stored.email.value,
+      role: stored.role,
       createdAt: stored.createdAt,
     };
   }

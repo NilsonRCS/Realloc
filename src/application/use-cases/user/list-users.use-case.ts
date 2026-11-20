@@ -15,6 +15,7 @@ export class ListUsersUseCase implements IListUsersUseCase {
         id: user.id,
         name: user.name.value,
         email: user.email.value,
+        role: user.role,
         createdAt: user.createdAt,
       })),
       total: result.total,

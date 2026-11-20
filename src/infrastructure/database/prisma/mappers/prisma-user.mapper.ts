@@ -10,6 +10,7 @@ export class PrismaUserMapper {
       UserName.create(user.name),
       Email.create(user.email),
       user.passwordHash,
+      user.role,
       user.createdAt
     );
   }

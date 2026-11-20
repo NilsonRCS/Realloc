@@ -7,10 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  RECRUITER
+  RELOCATED
+}
+
+enum Seniority {
+  JUNIOR
+  MID
+  SENIOR
+  SPECIALIST
+}
+
+enum RelocationStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id           String   @id
   name         String
   email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  passwordHash String   @map("password_hash")
+  role         Role
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  recruiterProfile RecruiterProfile?
+  relocatedProfile RelocatedProfile?
+
+  @@map("users")
+}
+
+model RecruiterProfile {
+  id        String   @id
+  userId    String   @unique @map("user_id")
+  team      String?
+  position  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relocateds RelocatedProfile[]
+
+  @@map("recruiter_profiles")
+}
+
+model RelocatedProfile {
+  id                     String           @id
+  userId                 String?          @unique @map("user_id")
+  responsibleRecruiterId String           @map("responsible_recruiter_id")
+  name                   String
+  seniority              Seniority
+  description            String?
+  relocationStartDate    DateTime         @map("relocation_start_date") @db.Date
+  relocationEndDate      DateTime?        @map("relocation_end_date") @db.Date
+  status                 RelocationStatus @default(ACTIVE)
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  user                 User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  responsibleRecruiter RecruiterProfile @relation(fields: [responsibleRecruiterId], references: [id], onDelete: Restrict)
+
+  @@index([responsibleRecruiterId])
+  @@index([status])
+  @@map("relocated_profiles")
 }

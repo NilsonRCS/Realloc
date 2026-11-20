@@ -7,6 +7,10 @@ import { makeAuthenticateHook } from "@/presentation/http/middlewares/authentica
 import { makeAuthControllers } from "@/main/factories/auth.factory.js";
 import { makeTokenService } from "./factories/token-service.factory.js";
 import { makeUserControllers } from "./factories/user.factory.js";
+import { makeRecruiterControllers } from "./factories/recruiter.factory.js";
+import { makeRelocatedControllers } from "./factories/relocated.factory.js";
+import { recruiterRoutes } from "@/presentation/http/routes/recruiter.routes.js";
+import { relocatedRoutes } from "@/presentation/http/routes/relocated.routes.js";
 
 function buildApp(): FastifyInstance {
   const app = Fastify({ logger: true });
@@ -45,6 +49,8 @@ function buildApp(): FastifyInstance {
   const authenticate = makeAuthenticateHook(makeTokenService());
 
   void app.register(userRoutes(makeUserControllers(), authenticate), { prefix: "/api" });
+  void app.register(recruiterRoutes(makeRecruiterControllers(), authenticate), { prefix: "/api" });
+  void app.register(relocatedRoutes(makeRelocatedControllers(), authenticate), { prefix: "/api" });
   void app.register(authRoutes(makeAuthControllers(), authenticate), { prefix: "/api" });
 
   return app;

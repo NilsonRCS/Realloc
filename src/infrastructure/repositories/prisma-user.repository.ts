@@ -13,6 +13,7 @@ export class PrismaUserRepository implements UserRepositoryPort {
         name: user.name.value,
         email: user.email.value,
         passwordHash: user.passwordHash,
+        role: user.role,
         createdAt: user.createdAt,
       },
     });

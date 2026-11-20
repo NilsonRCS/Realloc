@@ -24,6 +24,7 @@ export class LoginUseCase implements ILoginUseCase {
     const accessToken = this.tokenService.sign({
       sub: user.id,
       email: user.email.value,
+      role: user.role,
     });
 
     return { accessToken };

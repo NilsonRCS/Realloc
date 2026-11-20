@@ -1,3 +1,4 @@
+import type { Role } from "@/domain/enums.js";
 import { Email } from "@/domain/value-objects/email.value-object.js";
 import { UserName } from "@/domain/value-objects/user-name.value-object.js";
 
@@ -7,6 +8,7 @@ export class User {
     public readonly name: UserName,
     public readonly email: Email,
     public readonly passwordHash: string,
+    public readonly role: Role,
     public readonly createdAt: Date
   ) {}
 }

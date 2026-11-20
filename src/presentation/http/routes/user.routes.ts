@@ -4,7 +4,7 @@ import type { ListUsersController } from "@/presentation/http/controllers/user/l
 import type { GetUserController } from "@/presentation/http/controllers/user/get-user.controller.js";
 import type { UpdateUserController } from "@/presentation/http/controllers/user/update-user.controller.js";
 import type { DeleteUserController } from "@/presentation/http/controllers/user/delete-user.controller.js";
-import type { AuthenticateHook } from "@/presentation/http/middlewares/authenticate.middleware.js";
+import { authorize, type AuthenticateHook } from "@/presentation/http/middlewares/authenticate.middleware.js";
 
 interface UserControllers {
   createUser: CreateUserController;
@@ -16,10 +16,14 @@ interface UserControllers {
 
 export function userRoutes(controllers: UserControllers, authenticate: AuthenticateHook) {
   return async (app: FastifyInstance) => {
-    app.post("/users", (req, reply) => controllers.createUser.handle(req, reply));
-    app.get("/users", { preHandler: [authenticate] }, (req, reply) => controllers.listUsers.handle(req, reply));
-    app.get("/users/:id", { preHandler: [authenticate] }, (req, reply) => controllers.getUser.handle(req, reply));
-    app.patch("/users/:id", { preHandler: [authenticate] }, (req, reply) => controllers.updateUser.handle(req, reply));
-    app.delete("/users/:id", { preHandler: [authenticate] }, (req, reply) => controllers.deleteUser.handle(req, reply));
+    // User management is admin-only. Recruiters and relocated people get their login
+    // through /recruiters and /relocated.
+    const adminOnly = [authenticate, authorize("ADMIN")];
+
+    app.post("/users", { preHandler: adminOnly }, (req, reply) => controllers.createUser.handle(req, reply));
+    app.get("/users", { preHandler: adminOnly }, (req, reply) => controllers.listUsers.handle(req, reply));
+    app.get("/users/:id", { preHandler: adminOnly }, (req, reply) => controllers.getUser.handle(req, reply));
+    app.patch("/users/:id", { preHandler: adminOnly }, (req, reply) => controllers.updateUser.handle(req, reply));
+    app.delete("/users/:id", { preHandler: adminOnly }, (req, reply) => controllers.deleteUser.handle(req, reply));
   };
 }

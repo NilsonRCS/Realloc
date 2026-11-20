@@ -19,7 +19,7 @@ class FakeTokenService implements TokenServicePort {
     }
 
     const [, sub, email] = parts;
-    return { sub, email };
+    return { sub, email, role: "ADMIN" };
   }
 }
 

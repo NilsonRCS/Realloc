@@ -36,6 +36,7 @@ model User {
 
   recruiterProfile RecruiterProfile?
   relocatedProfile RelocatedProfile?
+  refreshTokens    RefreshToken[]
 
   @@map("users")
 }
@@ -74,4 +75,22 @@ model RelocatedProfile {
   @@index([responsibleRecruiterId])
   @@index([status])
   @@map("relocated_profiles")
+}
+
+model RefreshToken {
+  id        String    @id
+  userId    String    @map("user_id")
+  /// All tokens descended from one login share a family; reuse of a revoked token revokes the family.
+  familyId  String    @map("family_id")
+  /// SHA-256 of the opaque token. The raw token is never stored.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
 }

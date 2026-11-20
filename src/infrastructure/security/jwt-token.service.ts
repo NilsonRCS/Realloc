@@ -1,37 +1,23 @@
-import { sign, verify, type JwtPayload, type SignOptions } from "jsonwebtoken";
-import { ROLES, type Role } from "@/domain/enums.js";
+import { sign, verify } from "jsonwebtoken";
 import type { TokenPayload, TokenServicePort } from "@/application/ports/token-service.port.js";
 
 export class JwtTokenService implements TokenServicePort {
   constructor(
     private readonly secret: string,
-    private readonly expiresIn: SignOptions["expiresIn"] = "1h"
+    private readonly expiresInSeconds: number
   ) {}
 
   sign(payload: TokenPayload): string {
-    return sign(payload, this.secret, { expiresIn: this.expiresIn });
+    return sign({}, this.secret, { algorithm: "HS256", subject: payload.sub, expiresIn: this.expiresInSeconds });
   }
 
   verify(token: string): TokenPayload | null {
     try {
-      const decoded = verify(token, this.secret);
-      if (typeof decoded === "string") {
+      const decoded = verify(token, this.secret, { algorithms: ["HS256"] });
+      if (typeof decoded === "string" || typeof decoded.sub !== "string") {
         return null;
       }
-
-      const payload = decoded as JwtPayload;
-      if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
-        return null;
-      }
-      if (!ROLES.includes(payload.role as Role)) {
-        return null;
-      }
-
-      return {
-        sub: payload.sub,
-        email: payload.email,
-        role: payload.role as Role,
-      };
+      return { sub: decoded.sub };
     } catch {
       return null;
     }

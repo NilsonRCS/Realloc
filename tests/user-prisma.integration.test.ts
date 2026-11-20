@@ -122,3 +122,39 @@ test("recruiter + relocated flow persists through Prisma (atomic user+profile cr
   const list = await app.inject({ method: "GET", url: "/api/relocated?status=ACTIVE", headers: bearer(recruiterToken) });
   assert.equal(list.json().total, 1);
 });
+
+test("refresh tokens are stored hashed, rotate atomically and die on reuse (Prisma)", async () => {
+  const { adminToken, bearer, PASSWORD } = await import("./helpers.js");
+  const { prismaClient } = await import("../src/infrastructure/database/prisma/client.js");
+  const admin = await adminToken(app);
+
+  await app.inject({
+    method: "POST",
+    url: "/api/users",
+    headers: bearer(admin),
+    payload: { name: "Session User", email: "session.prisma@example.com", password: PASSWORD },
+  });
+
+  const login = await app.inject({
+    method: "POST",
+    url: "/api/auth/login",
+    payload: { email: "session.prisma@example.com", password: PASSWORD },
+  });
+  const first = login.cookies.find((c) => c.name === "refresh_token")!.value;
+
+  const stored = await prismaClient.refreshToken.findMany({ where: { user: { email: "session.prisma@example.com" } } });
+  assert.equal(stored.length, 1);
+  assert.notEqual(stored[0].tokenHash, first); // raw token is never persisted
+  assert.equal(stored[0].tokenHash.length, 64);
+
+  // two concurrent refreshes with the same token: exactly one may win
+  const [r1, r2] = await Promise.all(
+    [0, 1].map(() => app.inject({ method: "POST", url: "/api/auth/refresh", cookies: { refresh_token: first } }))
+  );
+  const codes = [r1.statusCode, r2.statusCode].sort();
+  assert.deepEqual(codes, [200, 401]);
+
+  // the race loser triggers family revocation: every token of the family is now revoked
+  const family = await prismaClient.refreshToken.findMany({ where: { familyId: stored[0].familyId } });
+  assert.equal(family.every((t) => t.revokedAt !== null), true);
+});

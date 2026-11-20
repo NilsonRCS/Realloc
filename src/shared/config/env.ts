@@ -10,7 +10,22 @@ const envSchema = z
     USER_REPOSITORY: z.enum(["inmemory", "prisma"]).default("inmemory"),
     DATABASE_URL: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     JWT_SECRET: z.string().min(16, "JWT_SECRET must have at least 16 characters"),
-    JWT_EXPIRES_IN: z.preprocess(emptyToUndefined, z.string().min(1).default("1h")),
+    // Short-lived access token; the refresh token (below) keeps the session alive.
+    ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).default(900),
+    REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+    // Comma-separated browser origins allowed to call the API with cookies (e.g. the Next.js front).
+    CORS_ORIGINS: z.preprocess(
+      emptyToUndefined,
+      z
+        .string()
+        .optional()
+        .transform((value) =>
+          (value ?? "")
+            .split(",")
+            .map((origin) => origin.trim())
+            .filter(Boolean)
+        )
+    ),
   })
   .refine((env) => env.USER_REPOSITORY !== "prisma" || Boolean(env.DATABASE_URL), {
     message: "DATABASE_URL is required when USER_REPOSITORY=prisma",

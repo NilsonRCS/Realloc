@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { RecruiterRepositoryPort, RecruiterWithUser } from "@/domain/ports/recruiter-repository.port.js";
+import type { RecruiterFilters, RecruiterRepositoryPort, RecruiterWithUser } from "@/domain/ports/recruiter-repository.port.js";
 import { PrismaRecruiterMapper } from "@/infrastructure/database/prisma/mappers/prisma-recruiter.mapper.js";
 
 export class PrismaRecruiterRepository implements RecruiterRepositoryPort {
@@ -40,15 +40,22 @@ export class PrismaRecruiterRepository implements RecruiterRepositoryPort {
     return row ? PrismaRecruiterMapper.toDomain(row) : null;
   }
 
-  async findAll(page: number, limit: number): Promise<{ recruiters: RecruiterWithUser[]; total: number }> {
+  async findAll(
+    page: number,
+    limit: number,
+    filters: RecruiterFilters = {}
+  ): Promise<{ recruiters: RecruiterWithUser[]; total: number }> {
+    const where = filters.active === undefined ? {} : { active: filters.active };
+
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.recruiterProfile.findMany({
+        where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: "desc" },
         include: { user: true },
       }),
-      this.prisma.recruiterProfile.count(),
+      this.prisma.recruiterProfile.count({ where }),
     ]);
 
     return { recruiters: rows.map(PrismaRecruiterMapper.toDomain), total };

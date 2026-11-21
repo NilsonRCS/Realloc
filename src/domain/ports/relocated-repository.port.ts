@@ -11,6 +11,7 @@ export interface RelocatedRepositoryPort {
   /** When `user` is given, the login and the profile are created atomically. */
   create(profile: RelocatedProfile, user?: User): Promise<RelocatedProfile>;
   findById(id: string): Promise<RelocatedProfile | null>;
+  findByUserId(userId: string): Promise<RelocatedProfile | null>;
   findAll(
     page: number,
     limit: number,

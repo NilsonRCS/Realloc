@@ -158,3 +158,62 @@ test("refresh tokens are stored hashed, rotate atomically and die on reuse (Pris
   const family = await prismaClient.refreshToken.findMany({ where: { familyId: stored[0].familyId } });
   assert.equal(family.every((t) => t.revokedAt !== null), true);
 });
+
+test("self-registered recruiter is stored inactive and shows up in the pending filter (Prisma)", async () => {
+  const { adminToken, bearer, PASSWORD } = await import("./helpers.js");
+  const admin = await adminToken(app);
+
+  const res = await app.inject({
+    method: "POST",
+    url: "/api/auth/register/recruiter",
+    payload: { name: "Pending Prisma", email: "pending.prisma@example.com", password: PASSWORD },
+  });
+  assert.equal(res.statusCode, 201);
+
+  const pending = await app.inject({ method: "GET", url: "/api/recruiters?active=false", headers: bearer(admin) });
+  assert.equal(pending.json().total, 1);
+  assert.equal(pending.json().recruiters[0].email, "pending.prisma@example.com");
+
+  const active = await app.inject({ method: "GET", url: "/api/recruiters?active=true", headers: bearer(admin) });
+  assert.equal(
+    active.json().recruiters.some((r: { email: string }) => r.email === "pending.prisma@example.com"),
+    false
+  );
+});
+
+test("relocated sign-up + form: profile is linked to the account, concurrent submits give one 201 and one 409 (Prisma)", async () => {
+  const { adminToken, bearer, login, PASSWORD } = await import("./helpers.js");
+  const admin = await adminToken(app);
+
+  const recruiter = (
+    await app.inject({
+      method: "POST",
+      url: "/api/recruiters",
+      headers: bearer(admin),
+      payload: { name: "Rita Form", email: "rita.form@example.com", password: PASSWORD },
+    })
+  ).json();
+
+  const reg = await app.inject({
+    method: "POST",
+    url: "/api/auth/register/relocated",
+    payload: { name: "Rui Form", email: "rui.form@example.com", password: PASSWORD },
+  });
+  assert.equal(reg.statusCode, 201);
+  const token = await login(app, "rui.form@example.com");
+
+  const submit = () =>
+    app.inject({
+      method: "POST",
+      url: "/api/relocated/me",
+      headers: bearer(token),
+      payload: { seniority: "MID", relocationStartDate: "2026-12-01", responsibleRecruiterId: recruiter.id },
+    });
+  const results = await Promise.all([submit(), submit()]);
+  assert.deepEqual(results.map((r) => r.statusCode).sort(), [201, 409]);
+
+  const mine = await app.inject({ method: "GET", url: "/api/relocated/me", headers: bearer(token) });
+  assert.equal(mine.statusCode, 200);
+  assert.equal(mine.json().userId, reg.json().id);
+  assert.equal(mine.json().name, "Rui Form");
+});

@@ -20,6 +20,10 @@ export class InMemoryRelocatedRepository implements RelocatedRepositoryPort {
     return this.relocateds.find((r) => r.id === id) ?? null;
   }
 
+  async findByUserId(userId: string): Promise<RelocatedProfile | null> {
+    return this.relocateds.find((r) => r.userId === userId) ?? null;
+  }
+
   async findAll(
     page: number,
     limit: number,

@@ -27,7 +27,7 @@ export class CreateRecruiterUseCase implements ICreateRecruiterUseCase {
 
     const now = new Date();
     const user = new User(randomUUID(), UserName.create(input.name), email, hashPassword(input.password), "RECRUITER", now);
-    const profile = new RecruiterProfile(randomUUID(), user.id, input.team ?? null, input.position ?? null, true, now);
+    const profile = new RecruiterProfile(randomUUID(), user.id, input.team ?? null, input.position ?? null, input.active ?? true, now);
 
     return toRecruiterResponse(await this.recruiterRepository.createWithUser({ user, profile }));
   }

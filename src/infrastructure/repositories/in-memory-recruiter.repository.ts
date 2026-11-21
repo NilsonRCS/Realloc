@@ -1,4 +1,4 @@
-import type { RecruiterRepositoryPort, RecruiterWithUser } from "../../domain/ports/recruiter-repository.port.js";
+import type { RecruiterFilters, RecruiterRepositoryPort, RecruiterWithUser } from "../../domain/ports/recruiter-repository.port.js";
 import { User } from "../../domain/entities/user.entity.js";
 import type { InMemoryUserRepository } from "./in-memory-user.repository.js";
 
@@ -21,9 +21,14 @@ export class InMemoryRecruiterRepository implements RecruiterRepositoryPort {
     return this.recruiters.find((r) => r.profile.userId === userId) ?? null;
   }
 
-  async findAll(page: number, limit: number): Promise<{ recruiters: RecruiterWithUser[]; total: number }> {
+  async findAll(
+    page: number,
+    limit: number,
+    filters: RecruiterFilters = {}
+  ): Promise<{ recruiters: RecruiterWithUser[]; total: number }> {
+    const filtered = this.recruiters.filter((r) => filters.active === undefined || r.profile.active === filters.active);
     const start = (page - 1) * limit;
-    return { recruiters: this.recruiters.slice(start, start + limit), total: this.recruiters.length };
+    return { recruiters: filtered.slice(start, start + limit), total: filtered.length };
   }
 
   async update(data: RecruiterWithUser): Promise<RecruiterWithUser> {

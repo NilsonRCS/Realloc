@@ -13,6 +13,9 @@ const envSchema = z
     // Short-lived access token; the refresh token (below) keeps the session alive.
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).default(900),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+    // Public sign-up is open to anyone, so it is throttled per IP.
+    REGISTER_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(5),
+    REGISTER_RATE_LIMIT_WINDOW_MINUTES: z.coerce.number().int().min(1).default(60),
     // Comma-separated browser origins allowed to call the API with cookies (e.g. the Next.js front).
     CORS_ORIGINS: z.preprocess(
       emptyToUndefined,

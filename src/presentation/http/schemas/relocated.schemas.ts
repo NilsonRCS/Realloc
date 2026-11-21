@@ -31,3 +31,10 @@ export const listRelocatedQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   status: z.enum(RELOCATION_STATUSES).optional(),
 });
+
+export const submitRelocatedFormSchema = z.object({
+  seniority: z.enum(SENIORITIES),
+  description: z.string().max(2000).optional(),
+  relocationStartDate: dateOnly,
+  responsibleRecruiterId: z.string().uuid(),
+});

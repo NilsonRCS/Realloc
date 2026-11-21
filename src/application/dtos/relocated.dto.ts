@@ -74,3 +74,12 @@ export function toRelocatedResponse(profile: RelocatedProfile): RelocatedRespons
     createdAt: profile.createdAt,
   };
 }
+
+/** The form a registered relocated person answers; it creates their own profile. */
+export interface SubmitRelocatedFormInputDto {
+  seniority: Seniority;
+  description?: string;
+  /** YYYY-MM-DD */
+  relocationStartDate: string;
+  responsibleRecruiterId: string;
+}

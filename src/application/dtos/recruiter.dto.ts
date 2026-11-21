@@ -11,12 +11,26 @@ export interface RecruiterResponseDto {
   createdAt: Date;
 }
 
+/** What a relocated person may see when choosing a recruiter: no e-mail, no account data. */
+export interface AvailableRecruiterDto {
+  id: string;
+  name: string;
+  team: string | null;
+  position: string | null;
+}
+
+export function toAvailableRecruiter({ user, profile }: RecruiterWithUser): AvailableRecruiterDto {
+  return { id: profile.id, name: user.name.value, team: profile.team, position: profile.position };
+}
+
 export interface CreateRecruiterInputDto {
   name: string;
   email: string;
   password: string;
   team?: string;
   position?: string;
+  /** Defaults to true. Self-registration sends false: an admin must approve the account. */
+  active?: boolean;
 }
 
 export interface UpdateRecruiterInputDto {

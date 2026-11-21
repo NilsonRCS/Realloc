@@ -4,6 +4,10 @@ import { LogoutAllUseCase } from "@/application/use-cases/auth/logout-all.use-ca
 import { LogoutUseCase } from "@/application/use-cases/auth/logout.use-case.js";
 import { GetCurrentUserUseCase } from "@/application/use-cases/auth/me.use-case.js";
 import { RefreshUseCase } from "@/application/use-cases/auth/refresh.use-case.js";
+import { CreateRecruiterUseCase } from "@/application/use-cases/recruiter/create-recruiter.use-case.js";
+import { CreateUserUseCase } from "@/application/use-cases/user/create-user.use-case.js";
+import { RegisterRecruiterController } from "@/presentation/http/controllers/auth/register-recruiter.controller.js";
+import { RegisterRelocatedController } from "@/presentation/http/controllers/auth/register-relocated.controller.js";
 import { LoginController } from "@/presentation/http/controllers/auth/login.controller.js";
 import { LogoutAllController } from "@/presentation/http/controllers/auth/logout-all.controller.js";
 import { LogoutController } from "@/presentation/http/controllers/auth/logout.controller.js";
@@ -25,6 +29,8 @@ export function makeAuthControllers() {
   });
 
   return {
+    registerRecruiter: new RegisterRecruiterController(new CreateRecruiterUseCase(userRepository, recruiterRepository)),
+    registerRelocated: new RegisterRelocatedController(new CreateUserUseCase(userRepository)),
     login: new LoginController(new LoginUseCase(userRepository, recruiterRepository, sessionService)),
     refresh: new RefreshController(
       new RefreshUseCase(refreshTokenRepository, userRepository, recruiterRepository, sessionService)
